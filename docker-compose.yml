@@ -1,0 +1,26 @@
+cat > docker-compose.yml << EOL
+version: "3.8"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+  fastapi:
+    build:
+      context: ./backend/fastapi_app
+    command: uvicorn main:fastapi_app --host 0.0.0.0 --port 8001 --reload
+    ports:
+      - "8001:8001"
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+EOL
