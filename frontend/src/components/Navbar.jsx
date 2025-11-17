@@ -28,6 +28,11 @@ function Navbar() {
           <ul className="navbar-nav ms-auto">
             {token ? (
               <>
+                {/* Yönetici Paneli Linki (Adım 5b) */}
+                <li className="nav-item">
+                  <Link className="nav-link text-warning" to="/admin">Yönetici Paneli</Link>
+                </li>
+
                 {/* Favorilerim Linki */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/favorites">Favorilerim</Link>
