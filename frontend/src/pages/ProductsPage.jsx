@@ -50,7 +50,12 @@ function ProductsPage() {
           <div className="col-md-4 mb-4" key={product.id}>
             <div className="card h-100">
               <Link to={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <img src={product.image_url} className="card-img-top" alt={product.name} />
+                <img 
+  src={product.image_url} 
+  className="card-img-top" 
+  alt={product.name} 
+  style={{ height: '200px', objectFit: 'contain', padding: '10px' }} 
+/>
                 <div className="card-body"> 
                   <h5 className="card-title">{product.name}</h5>
                 </div>

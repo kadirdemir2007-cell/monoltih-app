@@ -45,9 +45,11 @@ with app.app_context():
                      image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDDVvNr5YuxELAbsLLTX4SLk-x0-aX6KBZPw&s', # Örnek Klavye Resmi
                      description='RGB aydınlatmalı, dayanıklı mekanik tuşlara sahip profesyonel oyuncu klavyesi. Hızlı tepkime süresiyle rakiplerinizin önüne geçin.')
 
+        # ...
         p3 = Product(name='Mouse', price=400.0, 
-                     image_url='https://m.media-amazon.com/images/I/61OkuiCWbDL._AC_UF1000,1000_QL80_.jpg', # Örnek Mouse Resmi
+                     image_url='https://m.media-amazon.com/images/I/61mpMH5TzkL._AC_SL1500_.jpg', # Yeni Mouse Resmi
                      description='Saatlerce konforlu kullanım için tasarlanmış ergonomik kablosuz mouse. Ayarlanabilir DPI hassasiyeti ve programlanabilir tuşlar.')
+# ...
 
         db.session.add_all([p1, p2, p3])
         db.session.commit()
