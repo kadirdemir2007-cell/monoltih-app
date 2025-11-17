@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { toast } from 'react-toastify';
-// Yıldız ikonları için react-icons kullanıyoruz
 import { FaStar } from 'react-icons/fa';
 
 function ProductDetailPage() {
@@ -13,8 +12,8 @@ function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newComment, setNewComment] = useState('');
-  const [rating, setRating] = useState(5); // Varsayılan puan 5
-  const [hover, setHover] = useState(null); // Yıldızların üzerine gelince renk değişimi için
+  const [rating, setRating] = useState(5);
+  const [hover, setHover] = useState(null);
   
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -49,7 +48,6 @@ function ProductDetailPage() {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
-        // Yorumla birlikte puanı da gönderiyoruz
         await axios.post(`http://localhost:5000/api/products/${productId}/reviews`, 
             { content: newComment, rating: rating },
             { headers: { 'Authorization': `Bearer ${token}` } }

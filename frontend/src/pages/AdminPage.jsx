@@ -6,9 +6,9 @@ import { toast } from 'react-toastify';
 function AdminPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingProduct, setEditingProduct] = useState(null);
   const navigate = useNavigate();
 
-  // Yeni Ürün Formu İçin State
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -19,17 +19,13 @@ function AdminPage() {
     additional_images: ''
   });
 
-  // Token Kontrolü ve Veri Çekme
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/');
-      return;
-    }
+    if (!token) { navigate('/'); return; }
     try {
       const response = await axios.get('http://localhost:5000/api/products/', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -42,31 +38,55 @@ function AdminPage() {
     }
   };
 
-  // Form Değişikliklerini Yakalama
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Ürün Ekleme
-  const handleAddProduct = async (e) => {
+  const startEditing = (product) => {
+    setEditingProduct(product);
+    setFormData({
+        name: product.name,
+        price: product.price,
+        stock: product.stock,
+        category: product.category,
+        image_url: product.image_url,
+        description: product.description || '',
+        additional_images: product.additional_images || ''
+    });
+    window.scrollTo(0, 0);
+  };
+
+  const cancelEditing = () => {
+    setEditingProduct(null);
+    setFormData({ name: '', price: '', stock: '', category: '', image_url: '', description: '', additional_images: '' });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
+    
     try {
-      await axios.post('http://localhost:5000/api/products/', formData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      toast.success('Ürün başarıyla eklendi!');
-      setFormData({ name: '', price: '', stock: '', category: '', image_url: '', description: '', additional_images: '' }); // Formu temizle
-      fetchProducts(); // Listeyi güncelle
+      if (editingProduct) {
+        await axios.put(`http://localhost:5000/api/products/${editingProduct.id}`, formData, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        toast.success('Ürün başarıyla güncellendi!');
+        cancelEditing();
+      } else {
+        await axios.post('http://localhost:5000/api/products/', formData, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        toast.success('Ürün başarıyla eklendi!');
+        setFormData({ name: '', price: '', stock: '', category: '', image_url: '', description: '', additional_images: '' });
+      }
+      fetchProducts();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Ürün eklenirken hata oluştu. Yetkiniz var mı?');
+      toast.error(err.response?.data?.message || 'İşlem başarısız. Yetkiniz olmayabilir.');
     }
   };
 
-  // Ürün Silme
   const handleDelete = async (id) => {
     if (!window.confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
-
     const token = localStorage.getItem('token');
     try {
       await axios.delete(`http://localhost:5000/api/products/${id}`, {
@@ -75,7 +95,7 @@ function AdminPage() {
       toast.success('Ürün silindi.');
       fetchProducts();
     } catch (err) {
-      toast.error('Silme işlemi başarısız. Yetkiniz olmayabilir.');
+      toast.error('Silme işlemi başarısız.');
     }
   };
 
@@ -85,11 +105,20 @@ function AdminPage() {
     <div className="container mt-5 mb-5">
       <h2 className="mb-4 text-center">Yönetici Paneli</h2>
 
-      {/* Ürün Ekleme Formu */}
+      {/* --- YENİ EKLENEN BUTON --- */}
+      <div className="text-center mb-4">
+        <button className="btn btn-info text-white btn-lg" onClick={() => navigate('/admin/orders')}>
+            📦 Siparişleri Yönet
+        </button>
+      </div>
+      {/* -------------------------- */}
+
       <div className="card mb-5 shadow-sm">
-        <div className="card-header bg-primary text-white">Yeni Ürün Ekle</div>
+        <div className={`card-header text-white ${editingProduct ? 'bg-warning' : 'bg-primary'}`}>
+            {editingProduct ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle'}
+        </div>
         <div className="card-body">
-          <form onSubmit={handleAddProduct}>
+          <form onSubmit={handleSubmit}>
             <div className="row g-3">
               <div className="col-md-6">
                 <input type="text" name="name" className="form-control" placeholder="Ürün Adı" value={formData.name} onChange={handleChange} required />
@@ -112,15 +141,19 @@ function AdminPage() {
               <div className="col-12">
                 <input type="text" name="additional_images" className="form-control" placeholder="Ekstra Resim URL'leri (Virgülle ayırın)" value={formData.additional_images} onChange={handleChange} />
               </div>
-              <div className="col-12">
-                <button type="submit" className="btn btn-success w-100">Ürünü Ekle</button>
+              <div className="col-12 d-flex gap-2">
+                <button type="submit" className={`btn w-100 ${editingProduct ? 'btn-warning' : 'btn-success'}`}>
+                    {editingProduct ? 'Güncelle' : 'Ekle'}
+                </button>
+                {editingProduct && (
+                    <button type="button" className="btn btn-secondary w-25" onClick={cancelEditing}>İptal</button>
+                )}
               </div>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Ürün Listesi Tablosu */}
       <div className="table-responsive">
         <table className="table table-hover align-middle">
           <thead className="table-dark">
@@ -142,6 +175,7 @@ function AdminPage() {
                 <td>{product.price} TL</td>
                 <td>{product.stock}</td>
                 <td>
+                  <button className="btn btn-warning btn-sm me-2" onClick={() => startEditing(product)}>Düzenle</button>
                   <button className="btn btn-danger btn-sm" onClick={() => handleDelete(product.id)}>Sil</button>
                 </td>
               </tr>
