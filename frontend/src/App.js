@@ -1,3 +1,4 @@
+import FavoritesPage from "./pages/FavoritesPage";
 import ProfilePage from "./pages/ProfilePage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from 'react-toastify'; 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/products/:productId" element={<ProductDetailPage />} /> 
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
         </Routes>
       </div>
     </BrowserRouter>

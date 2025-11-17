@@ -28,14 +28,24 @@ function Navbar() {
           <ul className="navbar-nav ms-auto">
             {token ? (
               <>
+                {/* Favorilerim Linki */}
+                <li className="nav-item">
+                  <Link className="nav-link" to="/favorites">Favorilerim</Link>
+                </li>
+
+                {/* Sepet Linki */}
                 <li className="nav-item">
                   <a className="nav-link" href="/payment" onClick={handleCartClick}>
                     Sepet ({itemCount})
                   </a>
                 </li>
+
+                {/* Profilim Linki */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/profile">Profilim</Link>
                 </li>
+
+                {/* Çıkış Yap Butonu */}
                 <li className="nav-item">
                   <button className="btn btn-outline-light ms-2" onClick={handleLogout}>
                     Çıkış Yap

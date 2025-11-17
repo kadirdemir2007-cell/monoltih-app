@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { toast } from 'react-toastify';
+// Yıldız ikonları için react-icons kullanıyoruz
+import { FaStar } from 'react-icons/fa';
 
 function ProductDetailPage() {
   const { productId } = useParams();
@@ -10,18 +12,19 @@ function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [newComment, setNewComment] = useState(''); // Yeni yorum için state
+  const [newComment, setNewComment] = useState('');
+  const [rating, setRating] = useState(5); // Varsayılan puan 5
+  const [hover, setHover] = useState(null); // Yıldızların üzerine gelince renk değişimi için
+  
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  // Ürün detaylarını ve yorumları çeken fonksiyon
   const fetchProductDetail = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       setTimeout(() => navigate('/'), 3000);
       return;
     }
-
     try {
       const response = await axios.get(`http://localhost:5000/api/products/${productId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -42,18 +45,19 @@ function ProductDetailPage() {
     fetchProductDetail();
   }, [productId, navigate]);
 
-  // Yorum gönderme fonksiyonu
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
+        // Yorumla birlikte puanı da gönderiyoruz
         await axios.post(`http://localhost:5000/api/products/${productId}/reviews`, 
-            { content: newComment },
+            { content: newComment, rating: rating },
             { headers: { 'Authorization': `Bearer ${token}` } }
         );
-        toast.success('Yorumunuz eklendi!');
-        setNewComment(''); // Kutuyu temizle
-        fetchProductDetail(); // Yorumları güncellemek için sayfayı arka planda yenile
+        toast.success('Yorumunuz ve puanınız eklendi!');
+        setNewComment('');
+        setRating(5);
+        fetchProductDetail();
     } catch (err) {
         toast.error('Yorum eklenirken hata oluştu.');
     }
@@ -83,7 +87,13 @@ function ProductDetailPage() {
         {/* SAĞ TARAF: BİLGİLER */}
         <div className="col-md-6">
           <h1 className="display-5 fw-bold">{product.name}</h1>
-          <span className="badge bg-secondary mb-3">{product.category}</span>
+          <div className="mb-2">
+             <span className="badge bg-secondary me-2">{product.category}</span>
+             <span className="text-warning fs-5">
+               <FaStar /> {product.avg_rating || 0} / 5
+             </span>
+             <span className="text-muted ms-2">({product.reviews ? product.reviews.length : 0} değerlendirme)</span>
+          </div>
           <p className="fs-3 text-primary fw-bold">{product.price.toFixed(2)} TL</p>
           <div className="card bg-light mb-4">
               <div className="card-body"><p className="card-text">{product.description}</p></div>
@@ -95,26 +105,49 @@ function ProductDetailPage() {
         </div>
       </div>
 
-      {/* --- YORUMLAR BÖLÜMÜ --- */}
+      {/* --- YORUMLAR VE PUANLAMA --- */}
       <div className="row mt-5">
           <div className="col-12">
-              <h3 className="border-bottom pb-2">Yorumlar ({product.reviews ? product.reviews.length : 0})</h3>
+              <h3 className="border-bottom pb-2">Değerlendirmeler</h3>
               
-              {/* Yorum Yapma Formu */}
-              <div className="card mb-4 mt-3">
+              {/* Yorum Formu */}
+              <div className="card mb-4 mt-3 shadow-sm">
                   <div className="card-body">
+                      <h5 className="card-title">Yorum Yap ve Puan Ver</h5>
                       <form onSubmit={handleCommentSubmit}>
+                          {/* Yıldız Seçimi */}
                           <div className="mb-3">
-                              <textarea 
-                                  className="form-control" 
-                                  rows="3" 
-                                  placeholder="Bu ürün hakkında ne düşünüyorsunuz?"
-                                  value={newComment}
-                                  onChange={(e) => setNewComment(e.target.value)}
-                                  required
+                            {[...Array(5)].map((star, index) => {
+                              const ratingValue = index + 1;
+                              return (
+                                <label key={index}>
+                                  <input 
+                                    type="radio" 
+                                    name="rating" 
+                                    value={ratingValue} 
+                                    style={{ display: 'none' }} 
+                                    onClick={() => setRating(ratingValue)}
+                                  />
+                                  <FaStar 
+                                    className="star" 
+                                    color={ratingValue <= (hover || rating) ? "#ffc107" : "#e4e5e9"} 
+                                    size={25}
+                                    onMouseEnter={() => setHover(ratingValue)}
+                                    onMouseLeave={() => setHover(null)}
+                                    style={{ cursor: 'pointer', transition: 'color 200ms' }}
+                                  />
+                                </label>
+                              );
+                            })}
+                            <span className="ms-2 fw-bold">{rating} Yıldız</span>
+                          </div>
+
+                          <div className="mb-3">
+                              <textarea className="form-control" rows="3" placeholder="Bu ürün hakkında ne düşünüyorsunuz?"
+                                  value={newComment} onChange={(e) => setNewComment(e.target.value)} required
                               ></textarea>
                           </div>
-                          <button type="submit" className="btn btn-outline-primary">Yorum Yap</button>
+                          <button type="submit" className="btn btn-primary">Gönder</button>
                       </form>
                   </div>
               </div>
@@ -122,18 +155,21 @@ function ProductDetailPage() {
               {/* Yorum Listesi */}
               {product.reviews && product.reviews.length > 0 ? (
                   product.reviews.map(review => (
-                      <div key={review.id} className="card mb-3">
+                      <div key={review.id} className="card mb-3 border-0 border-bottom">
                           <div className="card-body">
-                              <h6 className="card-subtitle mb-2 text-muted d-flex justify-content-between">
-                                  <span><strong>{review.username}</strong></span>
-                                  <small>{review.date}</small>
-                              </h6>
+                              <div className="d-flex justify-content-between">
+                                  <h6 className="card-title fw-bold">{review.username}</h6>
+                                  <small className="text-muted">{review.date}</small>
+                              </div>
+                              <div className="mb-2 text-warning">
+                                {[...Array(review.rating)].map((_, i) => <FaStar key={i} size={15}/>)}
+                              </div>
                               <p className="card-text">{review.content}</p>
                           </div>
                       </div>
                   ))
               ) : (
-                  <p className="text-muted">Henüz yorum yapılmamış. İlk yorumu sen yap!</p>
+                  <p className="text-muted text-center py-4">Henüz değerlendirme yapılmamış. İlk yorumu sen yap!</p>
               )}
           </div>
       </div>
