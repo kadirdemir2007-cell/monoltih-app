@@ -23,7 +23,7 @@ function Navbar() {
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container-fluid">
         <Link className="navbar-brand" to={token ? "/products" : "/"}>Alışveriş Sitesi</Link>
-
+        
         <div className="collapse navbar-collapse">
           <ul className="navbar-nav ms-auto">
             {token ? (
@@ -34,7 +34,10 @@ function Navbar() {
                   </a>
                 </li>
                 <li className="nav-item">
-                  <button className="btn btn-outline-light" onClick={handleLogout}>
+                  <Link className="nav-link" to="/profile">Profilim</Link>
+                </li>
+                <li className="nav-item">
+                  <button className="btn btn-outline-light ms-2" onClick={handleLogout}>
                     Çıkış Yap
                   </button>
                 </li>

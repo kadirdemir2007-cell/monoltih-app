@@ -1,3 +1,4 @@
+import ProfilePage from "./pages/ProfilePage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css'; 
@@ -21,6 +22,7 @@ function App() {
           {/* YENİ EKLEDİĞİMİZ DİNAMİK ROTA */}
           <Route path="/products/:productId" element={<ProductDetailPage />} /> 
           <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </BrowserRouter>

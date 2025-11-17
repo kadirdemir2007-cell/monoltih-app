@@ -1,71 +1,113 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { toast } from 'react-toastify';
 
 function ProductDetailPage() {
-  // URL'den productId parametresini almak için useParams hook'unu kullanıyoruz
-  const { productId } = useParams(); 
+  const { productId } = useParams();
   const [product, setProduct] = useState(null);
+  const [selectedImage, setSelectedImage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchProductDetail = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('Detayları görmek için giriş yapmalısınız.');
-        setLoading(false);
         setTimeout(() => navigate('/'), 3000);
         return;
       }
 
       try {
-        // Backend'deki yeni endpoint'e productId ile istek atıyoruz
         const response = await axios.get(`http://localhost:5000/api/products/${productId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setProduct(response.data);
-      } catch (err) {
-        if (err.response && err.response.status === 404) {
-          setError('Ürün bulunamadı.');
-        } else {
-          setError('Ürün detayları yüklenirken bir hata oluştu.');
+        // İlk resmi varsayılan olarak seç
+        if (response.data.images && response.data.images.length > 0) {
+            setSelectedImage(response.data.images[0]);
         }
+      } catch (err) {
         console.error(err);
+        setError('Ürün detayları yüklenemedi.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchProductDetail();
-  }, [productId, navigate]); // productId değiştiğinde useEffect tekrar çalışır
+  }, [productId, navigate]);
 
-  if (loading) {
-    return <div className="container mt-5 text-center"><p>Yükleniyor...</p></div>;
-  }
-
-  if (error) {
-    return <div className="container mt-5 text-center"><p className="text-danger">{error}</p></div>;
-  }
-
-  if (!product) {
-    return null; // Ürün yoksa hiçbir şey gösterme (ya da "Ürün bulunamadı" mesajı)
-  }
+  if (loading) return <div className="text-center mt-5"><p>Yükleniyor...</p></div>;
+  if (error) return <div className="text-center mt-5 text-danger"><p>{error}</p></div>;
+  if (!product) return null;
 
   return (
     <div className="container mt-5">
       <div className="row">
+        {/* SOL TARAF: RESİM GALERİSİ */}
         <div className="col-md-6">
-          <img src={product.image_url} className="img-fluid" alt={product.name} />
+          {/* Büyük Resim */}
+          <div className="mb-3 text-center border rounded p-3">
+            <img 
+                src={selectedImage || product.image_url} 
+                className="img-fluid" 
+                alt={product.name} 
+                style={{ maxHeight: '400px', objectFit: 'contain' }} 
+            />
+          </div>
+          {/* Küçük Resimler (Thumbnails) */}
+          <div className="d-flex justify-content-center gap-2 flex-wrap">
+            {product.images && product.images.map((img, index) => (
+                <img 
+                    key={index}
+                    src={img}
+                    alt={`slide-${index}`}
+                    onClick={() => setSelectedImage(img)}
+                    style={{ 
+                        width: '80px', 
+                        height: '80px', 
+                        objectFit: 'cover', 
+                        cursor: 'pointer',
+                        border: selectedImage === img ? '2px solid #0d6efd' : '1px solid #ddd',
+                        borderRadius: '5px'
+                    }}
+                />
+            ))}
+          </div>
         </div>
+
+        {/* SAĞ TARAF: BİLGİLER */}
         <div className="col-md-6">
-          <h1>{product.name}</h1>
-          <p className="fs-4">{product.price.toFixed(2)} TL</p>
-          {/* AÇIKLAMA İÇİN BU SATIRI EKLEDİK */}
-          <p>{product.description}</p>
-          {/* Buraya daha sonra ürün açıklaması eklenebilir */}
-          <button className="btn btn-primary">Sepete Ekle</button> {/* Şimdilik çalışmıyor */}
+          <h1 className="display-5 fw-bold">{product.name}</h1>
+          <span className="badge bg-secondary mb-3">{product.category}</span>
+          <p className="fs-3 text-primary fw-bold">{product.price.toFixed(2)} TL</p>
+          
+          <div className="card bg-light mb-4">
+              <div className="card-body">
+                <p className="card-text">{product.description}</p>
+              </div>
+          </div>
+
+          {product.stock > 0 ? (
+              <p className="text-success fw-bold">Stokta: {product.stock} adet</p>
+          ) : (
+              <p className="text-danger fw-bold">Stok Tükendi</p>
+          )}
+          
+          <button 
+            className="btn btn-primary btn-lg w-100 mt-2"
+            disabled={product.stock === 0}
+            onClick={() => {
+              addToCart(product);
+              toast.success(`${product.name} sepete eklendi!`);
+            }}
+          >
+            {product.stock > 0 ? 'Sepete Ekle' : 'Tükendi'}
+          </button>
         </div>
       </div>
     </div>
