@@ -1,13 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css'; // <-- İŞTE EKSİK OLAN BU SATIR
 import App from './App';
-import { CartProvider } from './context/CartContext'; // Burayı ekledik
+import { CartProvider } from './context/CartContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <CartProvider> {/* Burayı ekledik */}
+    <CartProvider>
       <App />
-    </CartProvider> {/* Burayı ekledik */}
+    </CartProvider>
   </React.StrictMode>
 );
