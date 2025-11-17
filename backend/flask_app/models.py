@@ -7,6 +7,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(100))
+    is_admin = db.Column(db.Boolean, default=False)
     # Kullanıcının yorumlarına ulaşabilmek için ilişki
     reviews = db.relationship('Review', backref='user', lazy=True)
 

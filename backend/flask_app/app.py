@@ -1,28 +1,45 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_app.db import db
-from flask_app.models import Product, User, Order
+from flask_app.models import Product, User, Order, Wishlist, Review
 from flask_app.auth import auth_bp
 from flask_app.products import products_bp
 from flask_app.payment import payment_bp
+from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
+# Docker içindeki mutlak yolu kullanıyoruz
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////app/db.sqlite3" 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# CORS ayarları
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 db.init_app(app)
 
+# Blueprint'leri Kayıt Et
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(products_bp, url_prefix="/api/products")
 app.register_blueprint(payment_bp, url_prefix="/api/payment")
 
+# Veritabanı işlemleri
 with app.app_context():
     db.create_all()
     
+    # 1. ADMIN KULLANCISI OLUŞTURMA
+    if not User.query.filter_by(username='admin').first():
+        admin_user = User(
+            username='admin',
+            password=generate_password_hash('admin123', method='pbkdf2:sha256'),
+            is_admin=True
+        )
+        db.session.add(admin_user)
+        db.session.commit()
+        print("Admin kullanıcısı oluşturuldu: k.adı: admin, şifre: admin123")
+
+    # 2. ÜRÜNLERİ OLUŞTURMA
     if not Product.query.first():
-        print("Veritabanına özel ürünler ekleniyor...")
+        print("Veritabanına ürünler ekleniyor...")
         
         products = [
             Product(
@@ -30,6 +47,7 @@ with app.app_context():
                 price=45000.0, 
                 stock=5, 
                 category='Bilgisayar',
+                # Sizin gönderdiğiniz Hepsiburada Linkleri (Çalışanlar)
                 image_url='https://productimages.hepsiburada.net/s/777/960-1280/110000709566260.jpg',
                 additional_images='https://productimages.hepsiburada.net/s/777/960-1280/110000709520212.jpg,https://productimages.hepsiburada.net/s/777/960-1280/110000709520211.jpg',
                 description='Intel i7, RTX 4050, 16GB RAM. Yüksek performanslı oyuncu laptopu.'
@@ -59,7 +77,7 @@ with app.app_context():
                 category='Aksesuar',
                 image_url='https://productimages.hepsiburada.net/s/483/960-1280/110000528186076.jpg',
                 additional_images='https://productimages.hepsiburada.net/s/85/960-1280/110000028029472.jpg,https://productimages.hepsiburada.net/s/85/960-1280/110000028029474.jpg',
-                description='Mekanik switchler, RGB aydınlatma ve dayanıklı yapı. (STOK TÜKENDİ)'
+                description='Mekanik switchler, RGB aydınlatma ve dayanıklı yapı. (TÜKENDİ)'
             ),
             Product(
                 name='Asus TUF Gaming 27"', 
@@ -83,7 +101,7 @@ with app.app_context():
         
         db.session.add_all(products)
         db.session.commit()
-        print("Ürünler başarıyla eklendi.")
+        print("Örnek ürünler başarıyla eklendi.")
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

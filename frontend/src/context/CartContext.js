@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const CartContext = createContext();
 
@@ -7,7 +7,21 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  // 1. Başlangıçta sepeti localStorage'dan okumaya çalışıyoruz
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const localData = localStorage.getItem('cartItems');
+      return localData ? JSON.parse(localData) : [];
+    } catch (error) {
+      console.error("LocalStorage verisi okunamadı:", error);
+      return [];
+    }
+  });
+
+  // 2. cartItems her değiştiğinde (ekleme/silme), güncel hali localStorage'a kaydediyoruz
+  useEffect(() => {
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const addToCart = (product) => {
     setCartItems(prevItems => {
@@ -22,26 +36,24 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  // YENİ EKLEDİĞİMİZ FONKSİYON
   const removeFromCart = (productId) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === productId);
-      // Eğer ürün sepette 1 taneyse, ürünü sepetten tamamen çıkar
-      if (existingItem.quantity === 1) {
+      if (existingItem && existingItem.quantity === 1) {
         return prevItems.filter(item => item.id !== productId);
-      } else {
-        // Eğer 1'den fazlaysa, miktarını 1 azalt
+      } else if (existingItem) {
         return prevItems.map(item =>
           item.id === productId ? { ...item, quantity: item.quantity - 1 } : item
         );
       }
+      return prevItems;
     });
   };
 
   const value = {
     cartItems,
     addToCart,
-    removeFromCart, // Yeni fonksiyonu paylaşıma açıyoruz
+    removeFromCart,
   };
 
   return (

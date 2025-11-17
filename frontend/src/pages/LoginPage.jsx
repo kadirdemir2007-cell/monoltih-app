@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-// react-icons'dan göz ikonlarını import ediyoruz
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; 
 
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  // Şifrenin görünür olup olmadığını tutacak state
   const [showPassword, setShowPassword] = useState(false); 
   const navigate = useNavigate();
 
@@ -26,7 +24,6 @@ function LoginPage() {
     }
   };
 
-  // İkona tıklandığında showPassword state'ini tersine çevirir
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -50,11 +47,9 @@ function LoginPage() {
                     required
                   />
                 </div>
-                {/* Şifre Alanı ve İkon */}
-                <div className="mb-3 position-relative"> {/* İkonu konumlandırmak için */}
+                <div className="mb-3 position-relative">
                   <label htmlFor="password">Şifre</label>
                   <input
-                    // type özelliğini state'e göre dinamik olarak değiştiriyoruz
                     type={showPassword ? "text" : "password"} 
                     className="form-control"
                     id="password"
@@ -62,13 +57,12 @@ function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
-                  {/* Göz İkonu */}
                   <span 
                     onClick={togglePasswordVisibility} 
                     style={{ 
                       position: 'absolute', 
                       right: '10px', 
-                      top: '38px', // Label'dan sonraki inputun yüksekliğine göre ayarlayın
+                      top: '38px', 
                       cursor: 'pointer' 
                     }}
                   >
@@ -79,7 +73,14 @@ function LoginPage() {
                   <button type="submit" className="btn btn-primary">Giriş Yap</button>
                 </div>
               </form>
-              {message && <p className="mt-3 text-center">{message}</p>}
+
+              {/* ŞİFREMİ UNUTTUM LİNKİ - YENİ EKLENDİ */}
+              <div className="text-end mt-2">
+                  <Link to="/forgot-password" style={{ fontSize: '0.9rem', textDecoration: 'none' }}>Şifremi Unuttum</Link>
+              </div>
+
+              {message && <p className="mt-3 text-center text-danger">{message}</p>}
+              
               <div className="text-center mt-3">
                 <p>Hesabın yok mu? <Link to="/register">Kayıt Ol</Link></p>
               </div>
